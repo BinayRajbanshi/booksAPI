@@ -11,6 +11,7 @@ class UserBase(SQLModel):
     email:EmailStr = Field( index = True, unique=True)
     username:str = Field(min_length=1, max_length=50, unique=True)
     phone_no: str | None = Field(min_length=10, max_length=15)
+    is_verified: bool = Field(default=False)
 
     @field_validator("username")
     @classmethod
@@ -42,7 +43,8 @@ class UserUpdate(SQLModel):
     last_name: str | None = Field(min_length=1, max_length=50, index=True, default=None)
     email:EmailStr | None = Field( index = True, unique=True, default=None)
     username:str | None = Field(min_length=1, max_length=50, unique=True, default=None)
-    phone_no: str | None = Field(min_length=10, max_length=15)
+    phone_no: str | None = Field(min_length=10, max_length=15, default=None)
+    is_verified: bool | None = Field(default=None)
     password: str | None =  Field(min_length=8, max_length=50)
 
     @field_validator("username")

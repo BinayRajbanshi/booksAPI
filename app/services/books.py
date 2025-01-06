@@ -17,13 +17,13 @@ class BookService:
         return db_book
     
 
-    async def read_all_books(self, offset: int, limit: int , session: AsyncSession):
+    async def read_books(self, offset: int, limit: int , session: AsyncSession):
         statement = select(Book).offset(offset).limit(limit).order_by(desc(Book.created_at))
         result = await session.exec(statement)
         return result.all()
     
     
-    async def read_a_book(self, id:int, session:AsyncSession):
+    async def read_book(self, id:int, session:AsyncSession):
         result = await session.get(Book, id)
         if not result:
             raise HTTPException(status_code=404, detail="Book not found")

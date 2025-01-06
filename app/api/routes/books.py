@@ -22,13 +22,13 @@ async def read_books(
     limit: int = Query(default=20, le=100)
 ):
     # Fix the parameter order to match the service method
-    books_data = await book_service.read_all_books(offset, limit, session)
+    books_data = await book_service.read_books(offset, limit, session)
     return books_data
 
 
 @router.get("/books/{book_id}", response_model=BookPublic)
 async def read_book(book_id:int, session:AsyncSession=Depends(get_session)):
-    book_data = await book_service.read_a_book(book_id, session)
+    book_data = await book_service.read_book(book_id, session)
     return book_data
 
 
