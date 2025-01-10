@@ -69,6 +69,11 @@ class UserPublic(UserBase):
     updated_at: datetime
 
 
+class UserLogin(SQLModel):
+    email:EmailStr = Field(max_length=50)
+    password: str = Field(max_length=50)
+
+
 class User(UserBase, table=True):
     id: int | None = Field(primary_key=True, default=None)
     hashed_password: str = Field()

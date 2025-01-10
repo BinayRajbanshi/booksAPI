@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     DB_ECHO: bool
     API_V1_STR: str = "/api/v1"
+    JWT_SECRET:str
+    JWT_ALGORITHM:str
 
     model_config = SettingsConfigDict(
         env_file=BASE_DIR / ".env",
