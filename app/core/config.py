@@ -1,4 +1,4 @@
-# we are using pydantic-settings in order to maintain the environment variables
+# "pydantic-settings" in order to maintain the environment variables
 from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 

@@ -1,9 +1,10 @@
 from sqlmodel import SQLModel, Field
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from sqlalchemy import Column
 from sqlalchemy.dialects import postgresql as pg
 from .validators import validate_username, validate_password, validate_phone
 from pydantic import EmailStr, field_validator
+import uuid
 
 class UserBase(SQLModel):
     first_name: str = Field(min_length=1, max_length=50, index=True)
@@ -12,6 +13,7 @@ class UserBase(SQLModel):
     username:str = Field(min_length=1, max_length=50, unique=True)
     phone_no: str | None = Field(min_length=10, max_length=15)
     is_verified: bool = Field(default=False)
+    
 
     @field_validator("username")
     @classmethod
@@ -31,11 +33,6 @@ class UserCreate(UserBase):
     @classmethod
     def validate_password(cls, value):
         return validate_password(value)
-
-
-class UserLogin(SQLModel):
-    email:EmailStr 
-    password: str
 
 
 class UserUpdate(SQLModel):
@@ -69,11 +66,6 @@ class UserPublic(UserBase):
     updated_at: datetime
 
 
-class UserLogin(SQLModel):
-    email:EmailStr = Field(max_length=50)
-    password: str = Field(max_length=50)
-
-
 class User(UserBase, table=True):
     id: int | None = Field(primary_key=True, default=None)
     hashed_password: str = Field()
@@ -86,3 +78,20 @@ class User(UserBase, table=True):
 
     def __repr__(self)->str:
         return f"<User email={self.email} username={self.username}>"
+    
+
+# MODELS RELATED WITH TOKENS
+
+# JSON payload containing access token
+class Token(SQLModel):
+    access_token: str
+    token_type: str = "bearer"
+
+# Contents of JWT, so that we can validate the token
+class TokenData(SQLModel):
+    id: int
+    email: EmailStr
+    username:str
+    jti: uuid.UUID
+    exp: timedelta
+    refresh: bool

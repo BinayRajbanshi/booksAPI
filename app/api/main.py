@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.routes import books, users
+from app.api.routes import books, users, auth
 
 api_router = APIRouter()
 api_router.include_router(books.router, tags=["Books"]) 
