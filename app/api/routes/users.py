@@ -7,14 +7,14 @@ from app.models.users import UserCreate, UserPublic, Token,User
 from app.services.users import UserService
 from app.api.utils.password_hash import verify_hash
 from app.api.utils.access_token  import generate_token, verify_token
-from datetime import timedelta
+from datetime import timedelta, datetime, timezone
 from app.api.deps import get_current_user
 from fastapi.security import OAuth2PasswordRequestForm
 
 router = APIRouter()
 user_service = UserService()
 
-REFRESH_TOKEN_EXPIRY = 2
+REFRESH_TOKEN_EXPIRY_DAYS = 2
 
 
 @router.post("/signup", response_model=UserPublic )
@@ -37,10 +37,14 @@ async def login_user(login_data:Annotated[OAuth2PasswordRequestForm, Depends()],
                 "email": valid_user.email,
                 "username": valid_user.username
             }
-            access_token = generate_token(  data=payload)
+            access_token = generate_token(data=payload, expires_delta=timedelta(hours=1), refresh=False)
+            refresh_token = generate_token(data=payload, expires_delta=timedelta(days=REFRESH_TOKEN_EXPIRY_DAYS), refresh=True)
 
             return {
                     "access_token": access_token,
+                    "access_token_expires": datetime.now(timezone.utc) + timedelta(hours=1),
+                    "refresh_token":refresh_token,
+                    "refresh_token_expires": datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRY_DAYS),
                     "token_type": "bearer",
                 }
         

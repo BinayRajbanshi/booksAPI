@@ -12,33 +12,68 @@ from typing import Annotated
 from jwt.exceptions import InvalidTokenError
 
 
+credentials_exception = HTTPException(
+    status_code=status.HTTP_401_UNAUTHORIZED,
+    detail="Could not validate credentials",
+    headers={"WWW-Authenticate": "Bearer"},
+)
+
 
 oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl=f"{settings.API_V1_STR}/login/access-token"
+    tokenUrl=f"{settings.API_V1_STR}/login/access-token",
+    scheme_name="access_token"
 )
+
+class TokenVerifier():
+    def __init__(self, token_type:str):
+        self.token_type = token_type
+    
+    async def __call__(self, token:str = Depends(oauth2_scheme)):
+        if not token:
+            raise credentials_exception
+   
+        token_data = verify_token(token)
+        if token_data is not None:
+            print(f"returned token {token_data}")
+            validated_token = TokenData(**token_data)
+        else:
+            raise credentials_exception
+        
+        self.verify_token_type(validated_token)
+        return validated_token
+    
+    def verify_token_type(self, token_data: TokenData):
+        is_refresh = token_data.refresh == True
+        if self.token_type == "refresh" and not is_refresh:
+            raise HTTPException(
+                status_code= status.HTTP_403_FORBIDDEN,
+                detail="Please provide a valid refresh token"
+            )
+        elif self.token_type=="access" and is_refresh:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Please provide a valid access token"
+            )
+            
+
+access_token_verifier = TokenVerifier("access")
+refresh_token_verifier = TokenVerifier("refresh")
 
 user_service = UserService()
 
 
-
-async def get_current_user(token:Annotated[str, Depends(oauth2_scheme)], session: AsyncSession = Depends(get_session))->User:
-    print("returned by the instance", token)
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        user = verify_token(token)
-        if not user:
-            raise credentials_exception
-        validated_token = TokenData(**user)
-    except InvalidTokenError:
-        raise credentials_exception
-    db_user = await session.get(User, validated_token.id)
+# DEPENDENCY CHAIN TO RETRIVE THE TOKEN AND THEN VERIFY THE TOKEN
+async def get_current_user(
+    token_data: Annotated[TokenData, Depends(access_token_verifier)],
+    session: Annotated[AsyncSession, Depends(get_session)]
+) -> User:
+    db_user = await session.get(User, token_data.id)
     if db_user is None:
         raise credentials_exception
     return db_user
+
+
+
 
 
 # async def get_current_active_user(

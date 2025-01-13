@@ -85,6 +85,9 @@ class User(UserBase, table=True):
 # JSON payload containing access token
 class Token(SQLModel):
     access_token: str
+    access_token_expires:datetime
+    refresh_token: str
+    refresh_token_expires:datetime
     token_type: str = "bearer"
 
 # Contents of JWT, so that we can validate the token
@@ -92,6 +95,6 @@ class TokenData(SQLModel):
     id: int
     email: EmailStr
     username:str
-    jti: uuid.UUID
-    exp: timedelta
+    jti: str
+    exp: int #UNIX timestamp
     refresh: bool
